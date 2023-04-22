@@ -445,7 +445,7 @@ export const MainStack = () => {
                 <FormItemWrapper className="sm:flex-1">
                   <InputWrapper>
                     <label htmlFor="rua" className="text-[.8rem] mb-2">
-                      Rua
+                      Logradouro
                     </label>
                     <Input
                       className="sm:flex-1"
