@@ -18,7 +18,8 @@ export const validationSchema = yup.object().shape({
     street: yup.string().required("Informe o nome da rua"),
 
     number: yup.string().required("Informe um número"),
-    bairro: yup.string().required("Informe um cairro"),
+    bairro: yup.string().required("Informe um bairro"),
     city: yup.string().required("Informe uma cidade"),
     qtItems: yup.string().required("Informe a quantidade de items do pedido"),
+    purchaseValue: yup.string().required("Informe o valor do pedido"),
 })

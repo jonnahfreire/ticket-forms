@@ -5,9 +5,10 @@ import InputMask from "react-input-mask";
 
 import { Formik } from "formik";
 
-import { TaskContext, TaskProps } from "../contexts/TaskContext";
+import Loading from "../assets/loading.gif";
 import { ToastDialog } from "./utils/Utilities";
 import { validationSchema } from "../validators";
+import { DataProps, createTicket } from "../services/TicketService";
 
 const Wrapper = tw.div`
   flex flex-1
@@ -15,8 +16,13 @@ const Wrapper = tw.div`
   items-center
   justify-center
   w-screen h-screen
-  sm:mt-10
-  mt-10
+`;
+
+const LoadingWrapper = tw(Wrapper)`
+  mt-0
+  absolute
+  w-full h-full
+  bg-indigo-100/[0.7]
 `;
 
 const InputWrapper = tw.div`
@@ -114,54 +120,117 @@ const DocumentTypeSelect = ({
 };
 
 export const MainStack = () => {
-  const taskContext = useContext(TaskContext);
   const [isCPF, setIsCPF] = useState(true);
+  const [created, setCreated] = useState(false);
+  const [isSubmiting, setIsSubmiting] = useState(false);
+  const [ message, setMessage ] = useState<string | undefined>(undefined);
 
   const timerRef = useRef(0);
 
   function handleChangeToast() {
-    timerRef.current = window.setTimeout(() => {}, 100);
+    setCreated(!created);
+    timerRef.current = window.setTimeout(() => setCreated(false), 5000);
 
     return () => clearTimeout(timerRef.current);
   }
 
-  function save(task: TaskProps): void {
-    taskContext.editTask(task);
+  async function handleCreateTicket(data: DataProps) {
+    setIsSubmiting(true);
+    const response = await createTicket(data);
+    
+    if(response.code === 201) {
+      setIsSubmiting(false);
+      setTimeout(() => {
+        setMessage(response.message);
+        handleChangeToast();
+      }, 1000);
+    }
   }
+
+  const initialValues = {
+    cpf: "",
+    cnpj: "",
+    name: "",
+    phone: "",
+    email: "",
+    street: "",
+    number: "",
+    cep: "",
+    bairro: "",
+    city: "",
+    qtItems: "",
+    purchaseValue: ""
+  };
 
   return (
     <Wrapper>
+      {isSubmiting && (
+        <LoadingWrapper>
+          <img src={Loading} alt="Loading.."/>
+          <span className="font-bold mt-10">Enviando...</span>
+        </LoadingWrapper>
+      )}
+      {created && (
+        <ToastDialog
+          title={message ?? ""}
+          isOpen={true}
+          handleOpen={handleChangeToast}
+          handleClose={handleChangeToast}
+        />
+      )}
       <Formik
-        initialValues={{
-          cpf: "",
-          cnpj: "",
-          name: "",
-          phone: "",
-          email: "",
-          street: "",
-          number: "",
-          cep: "",
-          bairro: "",
-          city: "",
-          qtItems: "",
-        }}
+        initialValues={initialValues}
         validateOnChange={true}
         validateOnMount={true}
-        onSubmit={(values) => {}}
+        onSubmit={async (values, { resetForm }) => {
+          const phone =
+            values.phone !== undefined
+              ? values.phone.replace(/\D/g, '')
+              : undefined;
+
+          const document = isCPF
+            ? values.cpf.replace(/\D/g, '')
+            : values.cnpj.replace(/\D/g, '');
+
+          const data = {
+            pending: true,
+            document,
+            name: values.name,
+            phone,
+            email: values.email,
+            cep: values.cep.replace(/\D/g, ''),
+            street: values.street,
+            number: values.number,
+            bairro: values.bairro,
+            city: values.city,
+            itemsQuantity: Number(values.qtItems),
+            purchaseValue: values.purchaseValue,
+          };
+
+          await handleCreateTicket(data);
+          resetForm();
+        }}
         validationSchema={validationSchema}
       >
         {({
           handleChange,
-          handleBlur,
           handleSubmit,
           values,
           touched,
           errors,
-          isValid,
+          setErrors,
           setFieldValue,
         }) => (
           <>
-            <FormItemWrapper className="flex-col justify-start items-start min-w-fit pb-[20px]">
+            <FormItemWrapper 
+              className="
+              flex-col 
+              justify-start 
+              items-start 
+              min-w-fit 
+              pb-[20px] 
+              sm:mt-10 mt-10"
+            >
               <FormItemWrapper className="sm:flex-row">
                 <FormItemWrapper>
                   <FormItemWrapper className="flex-row">
@@ -185,6 +254,7 @@ export const MainStack = () => {
                           id="cpf"
                           className={maskedInpuStyle}
                           value={values.cpf}
+                          onBlur={() => setFieldValue("cnpj", "0")}
                           onChange={handleChange("cpf")}
                           mask="999.999.999-99"
                           maskChar={null}
@@ -196,6 +266,7 @@ export const MainStack = () => {
                           id="cnpj"
                           className={maskedInpuStyle}
                           value={values.cnpj}
+                          onBlur={() => setFieldValue("cpf", "0")}
                           onChange={handleChange("cnpj")}
                           mask="999.999.999/999-99"
                           maskChar={null}
@@ -386,13 +457,13 @@ export const MainStack = () => {
               </FormItemWrapper>
               {/* ENDEREÇO */}
               <FormItemWrapper className="sm:flex-row items-center justify-between sm:w-full">
-                <FormItemWrapper>
+                <FormItemWrapper className="sm:w-40 sm:mr-10">
                   <InputWrapper>
                     <label htmlFor="qt-items" className="text-[.8rem] mb-2">
                       Quantidade de items do pedido
                     </label>
                     <InputMask
-                      className={"sm:w-100" + maskedInpuStyle}
+                      className={"sm:w-40" + maskedInpuStyle}
                       id="qt-items"
                       value={values.qtItems}
                       onChange={handleChange("qtItems")}
@@ -407,7 +478,31 @@ export const MainStack = () => {
                     </ErrorsWrapper>
                   )}
                 </FormItemWrapper>
-                <SubmitButton className="sm:mr-2" type="submit" onClick={() => handleSubmit()}>
+                <FormItemWrapper>
+                  <InputWrapper>
+                    <label htmlFor="purchaseValue" className="text-[.8rem] mb-2">
+                      Valor do pedido
+                    </label>
+                    <Input
+                      className={"sm:w-20" + maskedInpuStyle}
+                      id="purchaseValue"
+                      value={values.purchaseValue}
+                      onChange={handleChange("purchaseValue")}
+                      placeholder="R$ 0,00"
+                      required
+                    />
+                  </InputWrapper>
+                  {errors.purchaseValue && touched.purchaseValue && (
+                    <ErrorsWrapper>
+                      <ErrorText>{errors.purchaseValue}</ErrorText>
+                    </ErrorsWrapper>
+                  )}
+                </FormItemWrapper>
+                <SubmitButton
+                  className="sm:mr-2"
+                  type="submit"
+                  onClick={() => handleSubmit()}
+                >
                   Enviar
                 </SubmitButton>
               </FormItemWrapper>
@@ -415,13 +510,17 @@ export const MainStack = () => {
           </>
         )}
       </Formik>
-      {false && (
-        <ToastDialog
-          isOpen={true}
-          handleOpen={handleChangeToast}
-          handleClose={handleChangeToast}
-        />
-      )}
     </Wrapper>
   );
 };
+
+export const moneyMask = (value: string) => {
+  value = value.replace('.', '').replace(',', '').replace(/\D/g, '')
+
+  const options = { minimumFractionDigits: 2 }
+  const result = new Intl.NumberFormat('pt-BR', options).format(
+    parseFloat(value) / 100
+  )
+
+  return 'R$ ' + result
+}
