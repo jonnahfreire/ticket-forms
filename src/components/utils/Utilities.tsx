@@ -1,7 +1,5 @@
-import * as AlertDialog from "@radix-ui/react-alert-dialog";
 import * as Toast from "@radix-ui/react-toast";
 
-import "./alert.css";
 import "./toast.css";
 
 interface ToastProps {

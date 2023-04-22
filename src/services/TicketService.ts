@@ -10,7 +10,7 @@ export interface DataProps {
     cep: string,
     street: string,
     number: string,
-    bairro: string,
+    neighborhood: string,
     city: string,
     itemsQuantity: number,
     purchaseValue: string,
@@ -63,6 +63,23 @@ export async function deleteTicket(id: string): Promise<RequestResponse> {
         headers: {
             "Content-Type": "application/json",
         },
+    })
+
+    return await response.json();
+}
+
+export interface ValidationResponseProps {
+    valid: boolean,
+    formatted: string
+}
+
+export async function validateDocument(document: string): Promise<ValidationResponseProps> { 
+    const response = await fetch(`${API}/document`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({document: document.replace(/\D/g, '').toString()})
     })
 
     return await response.json();

@@ -2,9 +2,9 @@ import * as yup from 'yup';
 
 
 export const validationSchema = yup.object().shape({
-    cnpj: yup.string().required("Insira um CNPJ válido"),
+    cnpj: yup.string().required("Informe um CNPJ"),
 
-    cpf: yup.string().required("Por favor insira um CPF válido"),
+    cpf: yup.string().required("Informe um CPF"),
 
     name: yup.string().required("Informe seu nome completo"),
         
@@ -18,7 +18,7 @@ export const validationSchema = yup.object().shape({
     street: yup.string().required("Informe o nome da rua"),
 
     number: yup.string().required("Informe um número"),
-    bairro: yup.string().required("Informe um bairro"),
+    neighborhood: yup.string().required("Informe um bairro"),
     city: yup.string().required("Informe uma cidade"),
     qtItems: yup.string().required("Informe a quantidade de items do pedido"),
     purchaseValue: yup.string().required("Informe o valor do pedido"),

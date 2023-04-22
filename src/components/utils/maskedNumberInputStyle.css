@@ -1,0 +1,14 @@
+.masked-number {
+    display: flex;
+    flex: 1;
+    padding-left: 2px;
+    margin-right: 2px;
+
+    max-width: 100px;
+    min-height: 40px;
+    font-size: 12px; 
+    background-color: #F2F2F2; 
+    outline: none; 
+    border: 1px solid #1B1D37;
+    border-radius: 5px;
+}

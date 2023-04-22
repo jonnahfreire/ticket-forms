@@ -1,14 +1,21 @@
-import { useContext, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import tw from "tailwind-styled-components";
 
 import InputMask from "react-input-mask";
+import { InputNumber as PrimeInputMaskNumber } from "primereact/inputnumber";
+
+import "./utils/maskedNumberInputStyle.css";
 
 import { Formik } from "formik";
 
 import Loading from "../assets/loading.gif";
 import { ToastDialog } from "./utils/Utilities";
 import { validationSchema } from "../validators";
-import { DataProps, createTicket } from "../services/TicketService";
+import {
+  DataProps,
+  createTicket,
+  validateDocument,
+} from "../services/TicketService";
 
 const Wrapper = tw.div`
   flex flex-1
@@ -75,7 +82,8 @@ const ErrorText = tw.span`
     text-[.7rem]
     font-bold
 `;
-const maskedInpuStyle = `
+
+const maskedInputStyle = `
     flex-1 
     pl-2 mr-2
     min-h-[40px]
@@ -85,7 +93,7 @@ const maskedInpuStyle = `
     border border-[#1B1D37] rounded
 `;
 
-const cepInpuStyle = maskedInpuStyle + "sm:w-[200px]";
+const cepInpuStyle = maskedInputStyle + "sm:w-[200px]";
 
 interface DocumentTypeSelectProps {
   checked: boolean;
@@ -123,7 +131,7 @@ export const MainStack = () => {
   const [isCPF, setIsCPF] = useState(true);
   const [created, setCreated] = useState(false);
   const [isSubmiting, setIsSubmiting] = useState(false);
-  const [ message, setMessage ] = useState<string | undefined>(undefined);
+  const [message, setMessage] = useState<string | undefined>(undefined);
 
   const timerRef = useRef(0);
 
@@ -134,11 +142,26 @@ export const MainStack = () => {
     return () => clearTimeout(timerRef.current);
   }
 
+  async function getAddressByCep(cep: string) {
+    const url = `https://brasilapi.com.br/api/cep/v1/${cep.replace(/\D/g, "")}`;
+
+    const request = await fetch(url, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+    const response = await request.json();
+
+    if (request.status == 200) {
+      const { city, neighborhood, street } = response;
+      return { city, neighborhood, street };
+    }
+    return null;
+  }
+
   async function handleCreateTicket(data: DataProps) {
     setIsSubmiting(true);
     const response = await createTicket(data);
-    
-    if(response.code === 201) {
+    if (response.code === 201) {
       setIsSubmiting(false);
       setTimeout(() => {
         setMessage(response.message);
@@ -156,17 +179,17 @@ export const MainStack = () => {
     street: "",
     number: "",
     cep: "",
-    bairro: "",
+    neighborhood: "",
     city: "",
     qtItems: "",
-    purchaseValue: ""
+    purchaseValue: "",
   };
 
   return (
     <Wrapper>
       {isSubmiting && (
         <LoadingWrapper>
-          <img src={Loading} alt="Loading.."/>
+          <img src={Loading} alt="Loading.." />
           <span className="font-bold mt-10">Enviando...</span>
         </LoadingWrapper>
       )}
@@ -185,12 +208,12 @@ export const MainStack = () => {
         onSubmit={async (values, { resetForm }) => {
           const phone =
             values.phone !== undefined
-              ? values.phone.replace(/\D/g, '')
+              ? values.phone.replace(/\D/g, "")
               : undefined;
 
           const document = isCPF
-            ? values.cpf.replace(/\D/g, '')
-            : values.cnpj.replace(/\D/g, '');
+            ? values.cpf.replace(/\D/g, "")
+            : values.cnpj.replace(/\D/g, "");
 
           const data = {
             pending: true,
@@ -198,13 +221,13 @@ export const MainStack = () => {
             name: values.name,
             phone,
             email: values.email,
-            cep: values.cep.replace(/\D/g, ''),
+            cep: values.cep.replace(/\D/g, ""),
             street: values.street,
             number: values.number,
-            bairro: values.bairro,
+            neighborhood: values.neighborhood,
             city: values.city,
             itemsQuantity: Number(values.qtItems),
-            purchaseValue: values.purchaseValue,
+            purchaseValue: values.purchaseValue.toString().replace(".", ","),
           };
 
           await handleCreateTicket(data);
@@ -222,7 +245,7 @@ export const MainStack = () => {
           setFieldValue,
         }) => (
           <>
-            <FormItemWrapper 
+            <FormItemWrapper
               className="
               flex-col 
               justify-start 
@@ -238,13 +261,19 @@ export const MainStack = () => {
                       label="CPF"
                       htmlFor="cpf"
                       checked={isCPF}
-                      onChange={() => setIsCPF(true)}
+                      onChange={() => {
+                        setFieldValue("cpf", "");
+                        setIsCPF(true);
+                      }}
                     />
                     <DocumentTypeSelect
                       label="CNPJ"
                       htmlFor="cnpj"
                       checked={!isCPF}
-                      onChange={() => setIsCPF(false)}
+                      onChange={() => {
+                        setFieldValue("cnpj", "");
+                        setIsCPF(false);
+                      }}
                     />
                   </FormItemWrapper>
                   <InputWrapper>
@@ -252,9 +281,24 @@ export const MainStack = () => {
                       <>
                         <InputMask
                           id="cpf"
-                          className={maskedInpuStyle}
+                          className={maskedInputStyle}
                           value={values.cpf}
-                          onBlur={() => setFieldValue("cnpj", "0")}
+                          onBlur={async () => {
+                            setFieldValue("cnpj", "0");
+
+                            if (values.cpf.length === 14) {
+                              const response = await validateDocument(
+                                values.cpf
+                              );
+
+                              if (!response.valid) {
+                                return setErrors({
+                                  cpf: "CPF inválido",
+                                  ...errors,
+                                });
+                              }
+                            }
+                          }}
                           onChange={handleChange("cpf")}
                           mask="999.999.999-99"
                           maskChar={null}
@@ -264,9 +308,23 @@ export const MainStack = () => {
                       <>
                         <InputMask
                           id="cnpj"
-                          className={maskedInpuStyle}
+                          className={maskedInputStyle}
                           value={values.cnpj}
-                          onBlur={() => setFieldValue("cpf", "0")}
+                          onBlur={async () => {
+                            setFieldValue("cpf", "0");
+
+                            if (values.cnpj.length === 18) {
+                              const response = await validateDocument(
+                                values.cnpj
+                              );
+                              if (!response.valid) {
+                                return setErrors({
+                                  cnpj: "CNPJ inválido",
+                                  ...errors,
+                                });
+                              }
+                            }
+                          }}
                           onChange={handleChange("cnpj")}
                           mask="999.999.999/999-99"
                           maskChar={null}
@@ -315,7 +373,7 @@ export const MainStack = () => {
                     </label>
                     <InputMask
                       id="phone"
-                      className={maskedInpuStyle}
+                      className={maskedInputStyle}
                       value={values.phone}
                       onChange={handleChange("phone")}
                       mask="(99) 99999-9999"
@@ -362,6 +420,17 @@ export const MainStack = () => {
                       className={cepInpuStyle}
                       value={values.cep}
                       onChange={handleChange("cep")}
+                      onBlur={async () => {
+                        if (values.cep.length == 10) {
+                          const address = await getAddressByCep(values.cep);
+
+                          if (address !== null) {
+                            setFieldValue("street", address.street, true);
+                            setFieldValue("neighborhood", address.neighborhood, true);
+                            setFieldValue("city", address.city, true);
+                          }
+                        }
+                      }}
                       mask="99.999-999"
                       maskChar={null}
                       required
@@ -417,20 +486,20 @@ export const MainStack = () => {
               <FormItemWrapper className="sm:flex-row">
                 <FormItemWrapper>
                   <InputWrapper>
-                    <label htmlFor="bairro" className="text-[.8rem] mb-2">
+                    <label htmlFor="neighborhood" className="text-[.8rem] mb-2">
                       Bairro
                     </label>
                     <Input
                       className="sm:w-30 w-100"
-                      id="bairro"
-                      value={values.bairro}
-                      onChange={handleChange("bairro")}
+                      id="neighborhood"
+                      value={values.neighborhood}
+                      onChange={handleChange("neighborhood")}
                       required
                     />
                   </InputWrapper>
-                  {errors.bairro && touched.bairro && (
+                  {errors.neighborhood && touched.neighborhood && (
                     <ErrorsWrapper>
-                      <ErrorText>{errors.bairro}</ErrorText>
+                      <ErrorText>{errors.neighborhood}</ErrorText>
                     </ErrorsWrapper>
                   )}
                 </FormItemWrapper>
@@ -456,14 +525,14 @@ export const MainStack = () => {
                 </FormItemWrapper>
               </FormItemWrapper>
               {/* ENDEREÇO */}
-              <FormItemWrapper className="sm:flex-row items-center justify-between sm:w-full">
+              <FormItemWrapper className="sm:flex-row items-start justify-between sm:w-full">
                 <FormItemWrapper className="sm:w-40 sm:mr-10">
                   <InputWrapper>
                     <label htmlFor="qt-items" className="text-[.8rem] mb-2">
                       Quantidade de items do pedido
                     </label>
                     <InputMask
-                      className={"sm:w-40" + maskedInpuStyle}
+                      className={"sm:w-40" + maskedInputStyle}
                       id="qt-items"
                       value={values.qtItems}
                       onChange={handleChange("qtItems")}
@@ -480,14 +549,32 @@ export const MainStack = () => {
                 </FormItemWrapper>
                 <FormItemWrapper>
                   <InputWrapper>
-                    <label htmlFor="purchaseValue" className="text-[.8rem] mb-2">
+                    <label
+                      htmlFor="purchaseValue"
+                      className="text-[.8rem] mb-2"
+                    >
                       Valor do pedido
                     </label>
-                    <Input
-                      className={"sm:w-20" + maskedInpuStyle}
+                    <PrimeInputMaskNumber
+                      inputStyle={{
+                        backgroundColor: "#F2F2F2",
+                        outline: 0,
+                        maxWidth: 90,
+                        borderRadius: 5,
+                      }}
+                      className="masked-number"
                       id="purchaseValue"
-                      value={values.purchaseValue}
-                      onChange={handleChange("purchaseValue")}
+                      value={
+                        Number(Number(values.purchaseValue).toFixed(2)) || null
+                      }
+                      mode="currency"
+                      currency="BRL"
+                      locale="pt-BR"
+                      minFractionDigits={2}
+                      maxFractionDigits={2}
+                      onValueChange={(e) =>
+                        setFieldValue("purchaseValue", e.target.value)
+                      }
                       placeholder="R$ 0,00"
                       required
                     />
@@ -499,9 +586,33 @@ export const MainStack = () => {
                   )}
                 </FormItemWrapper>
                 <SubmitButton
-                  className="sm:mr-2"
+                  className="sm:mr-2 sm:mt-7"
                   type="submit"
-                  onClick={() => handleSubmit()}
+                  onClick={async () => {
+                    handleSubmit();
+
+                    if (isCPF && values.cpf.length === 14) {
+                      const response = await validateDocument(values.cpf);
+
+                      if (!response.valid) {
+                        return setErrors({
+                          cpf: "CPF inválido",
+                          ...errors,
+                        });
+                      }
+                    }
+
+                    if (!isCPF && values.cnpj.length === 18) {
+                      const response = await validateDocument(values.cnpj);
+
+                      if (!response.valid) {
+                        return setErrors({
+                          cnpj: "CNPJ inválido",
+                          ...errors,
+                        });
+                      }
+                    }
+                  }}
                 >
                   Enviar
                 </SubmitButton>
@@ -513,14 +624,3 @@ export const MainStack = () => {
     </Wrapper>
   );
 };
-
-export const moneyMask = (value: string) => {
-  value = value.replace('.', '').replace(',', '').replace(/\D/g, '')
-
-  const options = { minimumFractionDigits: 2 }
-  const result = new Intl.NumberFormat('pt-BR', options).format(
-    parseFloat(value) / 100
-  )
-
-  return 'R$ ' + result
-}
