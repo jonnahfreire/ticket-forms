@@ -9,15 +9,15 @@ import { Form } from './pages/Form';
 
 const router = createBrowserRouter([
   {
-    path: "/",
+    path: "/ticket-forms",
     element: <App />,
     children: [
       {
-        path: "/form",
+        path: "/ticket-forms/form",
         element: <Form />,
       },
       {
-        path: "/client/:id",
+        path: "/ticket-forms/client/:id",
         element: <ClientForm />,
       }
     ]
