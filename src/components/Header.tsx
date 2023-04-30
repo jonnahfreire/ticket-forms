@@ -3,7 +3,7 @@ import tw from 'tailwind-styled-components';
 
 const Header = tw.div`
   flex
-  w-screen
+  w-full
   h-140
   p-4
   shadow-md

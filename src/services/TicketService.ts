@@ -3,17 +3,20 @@ const API = import.meta.env.VITE_API_URL || "https://glamorous-ruby-turkey.cycli
 export interface DataProps {
     id?: string,
     pending?: boolean,
-    document: string,
-    name: string,
+    filled?: boolean,
+    document?: string,
+    name?: string,
     phone?: string,
-    email: string,
-    cep: string,
-    street: string,
-    number: string,
-    neighborhood: string,
-    city: string,
-    itemsQuantity: number,
-    purchaseValue: string,
+    email?: string,
+    cep?: string,
+    street?: string,
+    number?: string,
+    neighborhood?: string,
+    city?: string,
+    purchaseValue?: string,
+    weight?: string,
+    itemsQuantity?: number,
+    shipping?: string
 }
 
 export interface RequestResponse {
@@ -33,7 +36,24 @@ export async function getTickets(): Promise<RequestResponse> {
     return await response.json();
 }
 
-export async function createTicket(data: DataProps): Promise<RequestResponse> {
+export async function getTicketById(id: string): Promise<DataProps> {
+    const response = await fetch(`${API}/data/${id}`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+        },
+    })
+
+    return await response.json();
+}
+
+export interface CreateTicketDataProps extends DataProps {
+    code?: number,
+    message?: string,
+    data?: DataProps 
+}
+
+export async function createTicket(data: DataProps): Promise<CreateTicketDataProps> {
     const response = await fetch(`${API}/data`, {
         method: "POST",
         headers: {
@@ -45,8 +65,8 @@ export async function createTicket(data: DataProps): Promise<RequestResponse> {
     return await response.json();
 }
 
-export async function editTicket(data: DataProps): Promise<RequestResponse> { 
-    const response = await fetch(`${API}/data/${data.id}`, {
+export async function updateTicket(id: string, data: DataProps): Promise<RequestResponse> { 
+    const response = await fetch(`${API}/data/${id}`, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json",

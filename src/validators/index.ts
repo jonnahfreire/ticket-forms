@@ -11,15 +11,21 @@ export const validationSchema = yup.object().shape({
     phone: yup.string().optional(),
     
     email: yup.string().email('Informe um email válido')
-        .required("Informe um email"),
-
+    .required("Informe um email"),
+    
     cep: yup.string().required("Informe seu CEP"),
-
+    
     street: yup.string().required("Informe o nome da rua"),
-
+    
     number: yup.string().required("Informe um número"),
     neighborhood: yup.string().required("Informe um bairro"),
     city: yup.string().required("Informe uma cidade"),
-    qtItems: yup.string().required("Informe a quantidade de items do pedido"),
-    purchaseValue: yup.string().required("Informe o valor do pedido"),
+    complement: yup.string().optional(),
 })
+
+export const DFFormValidationSchema = yup.object().shape({
+    shipping: yup.string().optional(),
+    purchaseValue: yup.string().required("Informe um valor"),
+    weight: yup.string().required("Informe o peso"),
+    itemsQuantity: yup.string().required("Informe a quantidade de items"),
+});
