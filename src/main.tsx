@@ -13,7 +13,7 @@ const router = createBrowserRouter([
     element: <App />,
     children: [
       {
-        path: "/ticket-forms/form",
+        path: "/ticket-forms/",
         element: <Form />,
       },
       {
