@@ -8,6 +8,7 @@ import {
   RouterProvider,
   Routes,
   useParams,
+  createHashRouter,
 } from "react-router-dom";
 import App from "./App";
 import "./index.css";
@@ -21,35 +22,25 @@ const router = createBrowserRouter([
     element: <App />,
     children: [
       {
-        path: "/ticket-forms/",
+        path: "/ticket-forms/form",
         element: <Form />,
       },
       {
-        path: "/ticket-forms/client/:id",
+        path: "/ticket-forms/form/:id",
         element: <ClientForm />,
       },
     ],
   },
 ]);
 
-const AppRouter = (params: any) => {
-  console.log(params)
-  return <>{params.id === "form" ? <Form /> : <ClientForm />}</>;
-};
-
 const Router = () => {
   return (
     <BrowserRouter>
       <Routes>
-        {/* <Route path="/" element={<App />}></Route> */}
-          <Route
-            path="/ticket-forms/form/"
-            element={<Form />}
-          ></Route>
-          <Route
-            path="/ticket-forms/form/:id"
-            element={<ClientForm />}
-          ></Route>
+        <Route path="/" element={<App />}>
+          <Route path="/ticket-forms/form/" element={<Form />}></Route>
+          <Route path="/ticket-forms/form/:id" element={<ClientForm />}></Route>
+        </Route>
       </Routes>
     </BrowserRouter>
   );
@@ -57,7 +48,7 @@ const Router = () => {
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
-    {/* <RouterProvider router={router} /> */}
-    <Router />
+    <RouterProvider router={router} />
+    {/* <Router /> */}
   </React.StrictMode>
 );
