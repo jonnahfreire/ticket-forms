@@ -50,7 +50,7 @@ export const Form = () => {
       if (response.data) {
         setTicket(response.data);
         const { id } = response.data;
-        const linkUrl = `${location.href}client/${id}`;
+        const linkUrl = `${location.href}/client/${id}`;
         setLink(linkUrl);
       }
     }
