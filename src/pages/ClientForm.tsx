@@ -16,14 +16,16 @@ import {
   validateDocument,
 } from "../services/TicketService";
 import { useParams } from "react-router-dom";
+import { AppHeader } from "../components/Header";
 
 export const Wrapper = tw.div`
   flex flex-1
   flex-col
   items-center
-  justify-center
+  justify-start
   w-screen h-screen
   p-0 m-0
+  pt-20
 `;
 
 export const LoadingWrapper = tw(Wrapper)`
@@ -213,6 +215,8 @@ export const ClientForm = () => {
   }, []);
 
   return (
+    <>
+    <AppHeader />
     <Wrapper>
       {isSubmiting && (
         <LoadingWrapper>
@@ -653,5 +657,6 @@ export const ClientForm = () => {
         </Formik>
       )}
     </Wrapper>
+    </>
   );
 };
