@@ -38,8 +38,8 @@ const Router = () => {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<App />}>
-          <Route path="/ticket-forms/form/" element={<Form />}></Route>
-          <Route path="/ticket-forms/form/:id" element={<ClientForm />}></Route>
+          <Route path="/form/" element={<Form />}></Route>
+          <Route path="/form/:id" element={<ClientForm />}></Route>
         </Route>
       </Routes>
     </BrowserRouter>
@@ -48,7 +48,7 @@ const Router = () => {
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
-    <RouterProvider router={router} />
-    {/* <Router /> */}
+    {/* <RouterProvider router={router} /> */}
+    <Router />
   </React.StrictMode>
 );
