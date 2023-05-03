@@ -258,7 +258,7 @@ export const Form = () => {
                 Valor
               </label>
               <span id="value" style={{ fontSize: ".7rem" }}>
-                R$ {Number(ticket?.purchaseValue).toFixed(2).replace(".", ",")}
+                R$ {Number(ticket?.purchaseValue?.replace(",", ".")).toFixed(2).replace(".", ",")}
               </span>
             </FormItemWrapper>
             <FormItemWrapper className="text-sm justify-center rounded-md h-[50px] bg-[#f2f2f2] shadow-lg mr-2 p-2">
