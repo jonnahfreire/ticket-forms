@@ -38,8 +38,8 @@ const Router = () => {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<App />}>
-          <Route path="/form/" element={<Form />}></Route>
-          <Route path="/form/:id" element={<ClientForm />}></Route>
+          <Route path="/" element={<Form />}></Route>
+          <Route path="/:id" element={<ClientForm />}></Route>
         </Route>
       </Routes>
     </BrowserRouter>
