@@ -52,7 +52,7 @@ export const Form = () => {
       if (response.data) {
         setTicket(response.data);
         const { id } = response.data;
-        const linkUrl = location.href.endsWith("/") ? `${location.href}${id}` : `${location.href}/${id}`;
+        const linkUrl = location.href.endsWith("/") ? `${location.href}form/${id}` : `${location.href}/form/${id}`;
         setLink(linkUrl);
       }
     }

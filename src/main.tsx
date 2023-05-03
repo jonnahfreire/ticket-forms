@@ -1,14 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import ReactDOM from "react-dom/client";
 import {
-  BrowserRouter,
-  HashRouter,
   createBrowserRouter,
-  Route,
   RouterProvider,
-  Routes,
-  useParams,
-  createHashRouter,
 } from "react-router-dom";
 import App from "./App";
 import "./index.css";
@@ -22,7 +16,7 @@ const router = createBrowserRouter([
     element: <App />,
     children: [
       {
-        path: "/form",
+        path: "/",
         element: <Form />,
       },
       {
@@ -33,22 +27,9 @@ const router = createBrowserRouter([
   },
 ]);
 
-const Router = () => {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<App />}>
-          <Route path="/" element={<Form />}></Route>
-          <Route path="/:id" element={<ClientForm />}></Route>
-        </Route>
-      </Routes>
-    </BrowserRouter>
-  );
-};
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <RouterProvider router={router} />
-    {/* <Router /> */}
   </React.StrictMode>
 );
