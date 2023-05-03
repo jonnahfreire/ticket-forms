@@ -18,15 +18,15 @@ import { Form } from "./pages/Form";
 
 const router = createBrowserRouter([
   {
-    path: "/ticket-forms",
+    path: "/",
     element: <App />,
     children: [
       {
-        path: "/ticket-forms/form",
+        path: "/form",
         element: <Form />,
       },
       {
-        path: "/ticket-forms/form/:id",
+        path: "/form/:id",
         element: <ClientForm />,
       },
     ],
@@ -48,7 +48,7 @@ const Router = () => {
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
-    {/* <RouterProvider router={router} /> */}
-    <Router />
+    <RouterProvider router={router} />
+    {/* <Router /> */}
   </React.StrictMode>
 );
