@@ -43,7 +43,7 @@ export interface RequestResponse {
 }
 
 export async function getTickets(): Promise<DataProps[]> {
-    const response = await fetch(`${API}/data`, {
+    const response = await fetch(`${API}/api/data/tickets`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
@@ -54,7 +54,7 @@ export async function getTickets(): Promise<DataProps[]> {
 }
 
 export async function getTicketById(id: string): Promise<DataProps> {
-    const response = await fetch(`${API}/data/${id}`, {
+    const response = await fetch(`${API}/api/data/ticket/${id}`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
@@ -66,7 +66,7 @@ export async function getTicketById(id: string): Promise<DataProps> {
 
 
 export async function login(email: string, password: string): Promise<AuthResponseData> {
-    const response = await fetch(`${API}/login`, {
+    const response = await fetch(`${API}/api/auth/login`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json", 
@@ -84,7 +84,7 @@ export interface CreateTicketDataProps extends DataProps {
 }
 
 export async function createTicket(data: DataProps): Promise<CreateTicketDataProps> {
-    const response = await fetch(`${API}/data`, {
+    const response = await fetch(`${API}/api/data/ticket`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -96,7 +96,7 @@ export async function createTicket(data: DataProps): Promise<CreateTicketDataPro
 }
 
 export async function updateTicket(id: string, data: DataProps): Promise<RequestResponse> { 
-    const response = await fetch(`${API}/data/${id}`, {
+    const response = await fetch(`${API}/api/data/ticket/${id}`, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json",
@@ -108,7 +108,7 @@ export async function updateTicket(id: string, data: DataProps): Promise<Request
 }
 
 export async function deleteTicket(id: string): Promise<RequestResponse> { 
-    const response = await fetch(`${API}/data/${id}`, {
+    const response = await fetch(`${API}/api/data/ticket/${id}`, {
         method: "DELETE",
         headers: {
             "Content-Type": "application/json",
@@ -124,7 +124,7 @@ export interface ValidationResponseProps {
 }
 
 export async function validateDocument(document: string): Promise<ValidationResponseProps> { 
-    const response = await fetch(`${API}/document`, {
+    const response = await fetch(`${API}/api/data/document`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",

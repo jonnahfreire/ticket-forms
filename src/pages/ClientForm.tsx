@@ -257,7 +257,22 @@ export const ClientForm = ({ isAdmView }: ClientFormViewProps) => {
           }}
           validateOnChange={true}
           validateOnMount={true}
-          onSubmit={async (values, { resetForm }) => {
+          onSubmit={async (values, { resetForm, setFieldError }) => {
+            if (isCPF && values.cpf.length === 14) {
+              const response = await validateDocument(values.cpf);
+
+              if (!response.valid) {
+                return setFieldError("cpf", "CPF inválido");
+              }
+            }
+
+            if (!isCPF && values.cnpj.length === 18) {
+              const response = await validateDocument(values.cnpj);
+              if (!response.valid) {
+                return setFieldError("cnpj", "CNPJ inválido");
+              }
+            }
+
             const phone =
               values.phone !== undefined
                 ? values.phone.replace(/\D/g, "")
@@ -287,8 +302,7 @@ export const ClientForm = ({ isAdmView }: ClientFormViewProps) => {
               });
             }
 
-            await handleUpdateTicket(data);
-            console.log(data);
+            // await handleUpdateTicket(data);
             resetForm();
           }}
           validationSchema={isAdmView ? null : validationSchema}
@@ -300,6 +314,7 @@ export const ClientForm = ({ isAdmView }: ClientFormViewProps) => {
             touched,
             errors,
             setErrors,
+            setFieldError,
             setFieldValue,
           }) => (
             <>
@@ -637,26 +652,18 @@ export const ClientForm = ({ isAdmView }: ClientFormViewProps) => {
                       type="submit"
                       onClick={async () => {
                         handleSubmit();
-
                         if (isCPF && values.cpf.length === 14) {
                           const response = await validateDocument(values.cpf);
 
                           if (!response.valid) {
-                            return setErrors({
-                              cpf: "CPF inválido",
-                              ...errors,
-                            });
+                            setFieldError("cpf", "CPF inválido");
                           }
                         }
 
                         if (!isCPF && values.cnpj.length === 18) {
                           const response = await validateDocument(values.cnpj);
-
                           if (!response.valid) {
-                            return setErrors({
-                              cnpj: "CNPJ inválido",
-                              ...errors,
-                            });
+                            setFieldError("cnpj", "CNPJ inválido");
                           }
                         }
                       }}

@@ -25,7 +25,7 @@ export const Login = () => {
         validateOnChange={true}
         validateOnMount={true}
         onSubmit={async (values, { resetForm, setFieldError }) => {
-          login(values.email, MD5(values.password).toString())
+          login(values.email, values.password)
             .then((response) => {
               if (response.error) {
                 response.isPasswordError &&
