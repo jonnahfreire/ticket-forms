@@ -68,8 +68,9 @@ export async function getTicketById(id: string): Promise<DataProps> {
 export async function login(email: string, password: string): Promise<AuthResponseData> {
     const response = await fetch(`${API}/login`, {
         method: "POST",
+        mode: "cors",
         headers: {
-            "Content-Type": "application/json",
+            "Content-Type": "application/json", 
         },
         body: JSON.stringify({email, password})
     })
