@@ -1,4 +1,4 @@
-const API = "http://localhost:3000" //import.meta.env.VITE_API_URL || "https://glamorous-ruby-turkey.cyclic.app";
+const API = import.meta.env.VITE_API_URL || "https://glamorous-ruby-turkey.cyclic.app";
 
 export interface DataProps {
     id?: string,
