@@ -52,7 +52,9 @@ export const Form = () => {
       if (response.data) {
         setTicket(response.data);
         const { id } = response.data;
-        const linkUrl = location.href.endsWith("/") ? `${location.href}form/${id}` : `${location.href}/form/${id}`;
+        const linkUrl = location.href.endsWith("/") 
+          ? `${location.href.replace("form", "")}client/${id}` 
+          : `${location.href.replace("form", "")}client/${id}`;
         setLink(linkUrl);
       }
     }
@@ -155,9 +157,9 @@ export const Form = () => {
                         backgroundColor: "#F2F2F2",
                         outline: 0,
                         borderRadius: 5,
-                        paddingLeft: 10,
+                        width: "100%",
                       }}
-                      className="masked-number min-w-[292px]"
+                      className="rounded w-100 masked-number min-w-[292px] border-[#fff]"
                       id="purchaseValue"
                       value={
                         Number(Number(values.purchaseValue).toFixed(2)) || null
@@ -190,9 +192,9 @@ export const Form = () => {
                         backgroundColor: "#F2F2F2",
                         outline: 0,
                         borderRadius: 5,
-                        paddingLeft: 10,
+                        width: "100%"
                       }}
-                      className="masked-number min-w-[292px]"
+                      className="masked-number min-w-[292px] border-[#fff]"
                       id="weight"
                       value={Number(Number(values.weight).toFixed(2)) || null}
                       mode="decimal"

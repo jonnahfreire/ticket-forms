@@ -1,4 +1,4 @@
-const API = import.meta.env.VITE_API_URL || "https://glamorous-ruby-turkey.cyclic.app";
+const API = "http://localhost:3000" //import.meta.env.VITE_API_URL || "https://glamorous-ruby-turkey.cyclic.app";
 
 export interface DataProps {
     id?: string,
@@ -16,7 +16,24 @@ export interface DataProps {
     purchaseValue?: string,
     weight?: string,
     itemsQuantity?: number,
-    shipping?: string
+    shipping?: string,
+    complement?: string
+}
+
+export interface UserProps {
+    id: string,
+    email: string,
+    password?: string,
+    createdAt?: string,
+    updatedAt?: string
+}
+
+export interface AuthResponseData {
+    error?: boolean,
+    isEmailError?: boolean,
+    isPasswordError?: boolean,
+    message?: string,
+    data: UserProps
 }
 
 export interface RequestResponse {
@@ -25,7 +42,7 @@ export interface RequestResponse {
     data?: DataProps[]
 }
 
-export async function getTickets(): Promise<RequestResponse> {
+export async function getTickets(): Promise<DataProps[]> {
     const response = await fetch(`${API}/data`, {
         method: "GET",
         headers: {
@@ -42,6 +59,19 @@ export async function getTicketById(id: string): Promise<DataProps> {
         headers: {
             "Content-Type": "application/json",
         },
+    })
+
+    return await response.json();
+}
+
+
+export async function login(email: string, password: string): Promise<AuthResponseData> {
+    const response = await fetch(`${API}/login`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({email, password})
     })
 
     return await response.json();

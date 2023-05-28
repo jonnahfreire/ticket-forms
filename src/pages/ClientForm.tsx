@@ -16,6 +16,7 @@ import {
   validateDocument,
 } from "../services/TicketService";
 import { useParams } from "react-router-dom";
+import { routes } from "../constants";
 
 export const Wrapper = tw.div`
   flex flex-1
@@ -94,16 +95,16 @@ export const maskedInputStyle = `
     border border-[#1B1D37] rounded
 `;
 
-const cepInpuStyle = maskedInputStyle + "sm:w-[200px]";
+export const cepInpuStyle = maskedInputStyle + "sm:w-[200px]";
 
-interface DocumentTypeSelectProps {
+export interface DocumentTypeSelectProps {
   checked: boolean;
   onChange: (e: any) => void;
   label: string;
   htmlFor: string;
   placeholder?: string;
 }
-const DocumentTypeSelect = ({
+export const DocumentTypeSelect = ({
   checked,
   onChange,
   label,
@@ -128,7 +129,11 @@ const DocumentTypeSelect = ({
   );
 };
 
-export const ClientForm = () => {
+interface ClientFormViewProps {
+  isAdmView?: boolean;
+}
+
+export const ClientForm = ({ isAdmView }: ClientFormViewProps) => {
   const params = useParams();
   const [isCPF, setIsCPF] = useState(true);
   const [created, setCreated] = useState(false);
@@ -136,20 +141,7 @@ export const ClientForm = () => {
   const [message, setMessage] = useState<string | undefined>(undefined);
   const [tickedFilled, setTickedFilled] = useState(false);
   const [tickedFound, setTickedFound] = useState(true);
-
-  const initialValues = {
-    cpf: "",
-    cnpj: "",
-    name: "",
-    phone: "",
-    email: "",
-    cep: "",
-    street: "",
-    number: "",
-    neighborhood: "",
-    city: "",
-    complement: "",
-  };
+  const [ticket, setTicket] = useState<DataProps>();
 
   const timerRef = useRef(0);
 
@@ -190,7 +182,6 @@ export const ClientForm = () => {
       setTimeout(() => {
         location.reload();
       }, 1500);
-
     } else {
       setIsSubmiting(false);
       setTickedFound(false);
@@ -201,10 +192,13 @@ export const ClientForm = () => {
     if (params.id !== undefined) {
       getTicketById(params.id).then((response) => {
         const ticket = response;
+        setTicket(ticket);
 
         if (response !== null && Object.keys(response).includes("error")) {
           setTickedFound(false);
-        } else {
+        }
+
+        if (!Object.keys(response).includes("error") && !isAdmView) {
           response !== null && setTickedFilled(ticket.filled!);
           response === null && setTickedFound(false);
         }
@@ -246,9 +240,21 @@ export const ClientForm = () => {
           </div>
         </>
       )}
-      {!isSubmiting && !tickedFilled && tickedFound && (
+      {!isSubmiting && !tickedFilled && tickedFound && ticket !== undefined && (
         <Formik
-          initialValues={initialValues}
+          initialValues={{
+            cpf: ticket?.document?.length === 11 ? ticket.document : "",
+            cnpj: ticket?.document?.length === 14 ? ticket.document : "",
+            name: ticket?.name || "",
+            phone: ticket?.phone || "",
+            email: ticket?.email || "",
+            cep: ticket?.cep! || "",
+            street: ticket?.street || "",
+            number: ticket?.number || "",
+            neighborhood: ticket?.neighborhood || "",
+            city: ticket?.city || "",
+            complement: ticket?.complement || "",
+          }}
           validateOnChange={true}
           validateOnMount={true}
           onSubmit={async (values, { resetForm }) => {
@@ -272,18 +278,20 @@ export const ClientForm = () => {
               number: values.number,
               neighborhood: values.neighborhood,
               city: values.city,
+              complement: values.complement,
             };
 
-            if (values.complement != "") {
+            if (values.complement !== "") {
               Object.defineProperty(data, "complement", {
                 value: values.complement,
               });
             }
 
             await handleUpdateTicket(data);
+            console.log(data);
             resetForm();
           }}
-          validationSchema={validationSchema}
+          validationSchema={isAdmView ? null : validationSchema}
         >
           {({
             handleChange,
@@ -614,6 +622,16 @@ export const ClientForm = () => {
                     </FormItemWrapper>
                     {/* ENDEREÇO */}
 
+                    {isAdmView && (
+                      <FormItemWrapper className="mb-2">
+                        <button className="bg-[#1b1d37] p-2 rounded">
+                          <a href={routes.tickets} className="text-white">
+                            Voltar
+                          </a>
+                        </button>
+                      </FormItemWrapper>
+                    )}
+
                     <SubmitButton
                       className="sm:mr-2 mb-2 sm:w-100"
                       type="submit"
@@ -643,7 +661,7 @@ export const ClientForm = () => {
                         }
                       }}
                     >
-                      Enviar
+                      {isAdmView ? "Atualizar" : "Enviar"}
                     </SubmitButton>
                   </FormItemWrapper>
                 </FormItemWrapper>

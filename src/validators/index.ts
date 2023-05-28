@@ -1,5 +1,11 @@
 import * as yup from 'yup';
 
+export const loginValidationSchema = yup.object().shape({
+    email: yup.string().email('Informe um email válido')
+    .required("Informe um email"),
+
+    password: yup.string().required("Informe uma senha"),
+});
 
 export const validationSchema = yup.object().shape({
     cnpj: yup.string().required("Informe um CNPJ"),

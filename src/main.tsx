@@ -9,19 +9,35 @@ import "./index.css";
 
 import { ClientForm } from "./pages/ClientForm";
 import { Form } from "./pages/Form";
+import { Login } from "./pages/Login";
+import { Tickets } from "./pages/Tickets";
+import { routes } from "./constants";
+import { TicketDetails } from "./pages/TicketDetails";
 
 const router = createBrowserRouter([
   {
-    path: "/",
+    path: routes.root,
     element: <App />,
     children: [
       {
-        path: "/",
+        path: routes.root,
+        element: <Login />,
+      },
+      {
+        path: routes.form,
         element: <Form />,
       },
       {
-        path: "/form/:id",
+        path: routes.tickets,
+        element: <Tickets />,
+      },
+      {
+        path: routes.client,
         element: <ClientForm />,
+      },
+      {
+        path: routes.ticketDetails,
+        element: <TicketDetails />,
       },
     ],
   },
