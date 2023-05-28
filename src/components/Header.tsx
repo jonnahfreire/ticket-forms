@@ -36,7 +36,7 @@ const HeaderTitleContent = tw.div`
 
 export const AppHeader = () => {
   return (
-    <Header className="mb-10">
+    <Header>
       <HeaderContent>
         <img src={Logo} alt="" className="mr-2" width={70} />
         <VerticalDivider />
