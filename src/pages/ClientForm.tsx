@@ -207,7 +207,7 @@ export const ClientForm = ({ isAdmView }: ClientFormViewProps) => {
   }, []);
 
   return (
-    <Wrapper className="-z-5">
+    <Wrapper>
       {isSubmiting && (
         <LoadingWrapper>
           <img src={Loading} alt="Loading.." />
