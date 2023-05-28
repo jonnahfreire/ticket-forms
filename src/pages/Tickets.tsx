@@ -31,7 +31,7 @@ export const Tickets = () => {
   }, []);
 
   return (
-    <Wrapper className="align-start">
+    <Wrapper className="align-start justify-start mt-20">
       {isLoading && (
         <LoadingWrapper>
           <img src={Loading} alt="Loading.." />

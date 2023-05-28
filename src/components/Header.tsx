@@ -11,7 +11,7 @@ const Header = tw.div`
   flex-row
   items-center
   justify-between
-  w-full
+  w-100
   h-140
   p-4
   shadow-md
@@ -21,6 +21,7 @@ const HeaderContent = tw.div`
   flex-row
   items-center
   justify-start
+  w-100
 `;
 const VerticalDivider = tw.div`
   border

@@ -623,8 +623,8 @@ export const ClientForm = ({ isAdmView }: ClientFormViewProps) => {
                     {/* ENDEREÇO */}
 
                     {isAdmView && (
-                      <FormItemWrapper className="mb-2">
-                        <button className="bg-[#1b1d37] p-2 rounded">
+                      <FormItemWrapper>
+                        <button className="sm:mr-2 mb-2 sm:w-100 bg-[#1b1d37] p-2 rounded">
                           <a href={routes.tickets} className="text-white">
                             Voltar
                           </a>
