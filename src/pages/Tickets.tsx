@@ -31,7 +31,7 @@ export const Tickets = () => {
   }, []);
 
   return (
-    <Wrapper className="align-start justify-start mt-20">
+    <Wrapper className="align-start justify-start">
       {isLoading && (
         <LoadingWrapper>
           <img src={Loading} alt="Loading.." />
@@ -39,7 +39,7 @@ export const Tickets = () => {
         </LoadingWrapper>
       )}
       {!isLoading && tickets.length && (
-        <div className="relative overflow-x-auto overflow-y-scroll max-h-[300px] custom-scrollbar">
+        <div className="relative overflow-x-auto overflow-y-scroll max-h-[300px] custom-scrollbar mt-20">
           <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
             <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 sticky top-0">
               <tr>
