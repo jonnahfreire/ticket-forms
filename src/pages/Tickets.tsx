@@ -86,7 +86,9 @@ export const Tickets = () => {
         </div>
       )}
       {!isLoading && !tickets.length && (
-        <span>Nenhuma etiqueta encontrada.</span>
+        <div className="no-tickets-message">
+          <span>Nenhuma etiqueta encontrada.</span>
+        </div>
       )}
     </Wrapper>
   );
