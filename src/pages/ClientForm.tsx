@@ -302,7 +302,7 @@ export const ClientForm = ({ isAdmView }: ClientFormViewProps) => {
               });
             }
 
-            // await handleUpdateTicket(data);
+            await handleUpdateTicket(data);
             resetForm();
           }}
           validationSchema={isAdmView ? null : validationSchema}
