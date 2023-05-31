@@ -121,7 +121,7 @@ export const Tickets = () => {
               Marcar como {isAllRowsChecked ? "geradas" : "gerada"}
             </ActionButton>
             <ActionButton onClick={() => handleSetTicketCreated(true)}>
-              Marcar como <b>não</b> {isAllRowsChecked ? "geradas" : "gerada"}
+              Marcar como {isAllRowsChecked ? "pendentes" : "pendente"}
             </ActionButton>
           </div>
           <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
