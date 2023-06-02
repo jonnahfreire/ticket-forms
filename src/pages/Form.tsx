@@ -94,6 +94,7 @@ export const Form = () => {
                 .replace(".", ","),
               purchaseValue: values.purchaseValue.toString().replace(".", ","),
               itemsQuantity: Number(values.itemsQuantity),
+              shipping: values.shipping ?? null
             };
 
             if (values.shipping != "") {
