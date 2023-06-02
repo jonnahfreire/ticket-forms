@@ -28,6 +28,7 @@ export const Form = () => {
   const [message, setMessage] = useState<string | undefined>(undefined);
   const [copied, setCopied] = useState(false);
   const [ticket, setTicket] = useState<DataProps | undefined>(undefined);
+  const [defaultShippingTypes, setDefaultShippingTypes] = useState(true);
 
   const timerRef = useRef(0);
 
@@ -52,7 +53,7 @@ export const Form = () => {
       if (response.data) {
         setTicket(response.data);
         const { id } = response.data;
-        const linkUrl = location.href.endsWith("/") 
+        const linkUrl = location.href.endsWith("/")
           ? `${location.href}client/${id}`
           : `${location.href}/client/${id}`;
         setLink(linkUrl);
@@ -94,7 +95,7 @@ export const Form = () => {
                 .replace(".", ","),
               purchaseValue: values.purchaseValue.toString().replace(".", ","),
               itemsQuantity: Number(values.itemsQuantity),
-              shipping: values.shipping ?? null
+              shipping: values.shipping ?? null,
             };
 
             if (values.shipping != "") {
@@ -193,7 +194,7 @@ export const Form = () => {
                         backgroundColor: "#F2F2F2",
                         outline: 0,
                         borderRadius: 5,
-                        width: "100%"
+                        width: "100%",
                       }}
                       className="masked-number min-w-[292px] border-[#fff]"
                       id="weight"
@@ -217,21 +218,48 @@ export const Form = () => {
                 </FormItemWrapper>
                 <FormItemWrapper className="sm:w-100">
                   <InputWrapper className="sm:w-100">
-                    <label htmlFor="shipping" className="text-[.8rem] mb-2">
-                      Tipo de envio
-                    </label>
-                    <select
-                      className="min-h-[40px] max-w-[290px] outline-none border border-[#1B1D37] rounded p-2"
-                      name="shipping"
-                      id="shipping"
-                      onChange={handleChange("shipping")}
-                      value={values.shipping}
+                    <div
+                      className="pr-3"
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
                     >
-                      <option value="default">Selecione</option>
-                      <option value="pac">PAC</option>
-                      <option value="sedex">SEDEX</option>
-                      <option value="pex">PEX</option>
-                    </select>
+                      <label htmlFor="shipping" className="text-[.8rem] mb-2">
+                        Tipo de envio
+                      </label>
+                      <label
+                        className="text-[.8rem] mb-2 font-semibold cursor-pointer"
+                        onClick={() =>
+                          setDefaultShippingTypes(!defaultShippingTypes)
+                        }
+                      >
+                        {defaultShippingTypes ? "Personalizado" : "Padrão"}
+                      </label>
+                    </div>
+                    {defaultShippingTypes ? (
+                      <select
+                        className="min-h-[40px] max-w-[290px] outline-none border border-[#1B1D37] rounded p-2"
+                        name="shipping"
+                        id="shipping"
+                        onChange={handleChange("shipping")}
+                        value={values.shipping}
+                      >
+                        <option value="default">Selecione</option>
+                        <option value="PAC">PAC</option>
+                        <option value="SEDEX">SEDEX</option>
+                        <option value="PEX">PEX</option>
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        placeholder="Transportadora"
+                        className="min-h-[40px] max-w-[290px] outline-none border border-[#1B1D37] rounded p-2"
+                        onChange={handleChange("shipping")}
+                        value={values.shipping}
+                      />
+                    )}
                   </InputWrapper>
                   {errors.shipping && touched.shipping && (
                     <ErrorsWrapper>
@@ -261,7 +289,10 @@ export const Form = () => {
                 Valor
               </label>
               <span id="value" style={{ fontSize: ".7rem" }}>
-                R$ {Number(ticket?.purchaseValue?.replace(",", ".")).toFixed(2).replace(".", ",")}
+                R${" "}
+                {Number(ticket?.purchaseValue?.replace(",", "."))
+                  .toFixed(2)
+                  .replace(".", ",")}
               </span>
             </FormItemWrapper>
             <FormItemWrapper className="text-sm justify-center rounded-md h-[50px] bg-[#f2f2f2] shadow-lg mr-2 p-2">
@@ -312,7 +343,10 @@ export const Form = () => {
           </SubmitButton>
           <FormItemWrapper className="flex items-end justify-end mb-5">
             {copied && (
-              <span className="text-green-600 font-semibold" style={{ fontSize: ".7rem" }}>
+              <span
+                className="text-green-600 font-semibold"
+                style={{ fontSize: ".7rem" }}
+              >
                 Copiado com sucesso!
               </span>
             )}

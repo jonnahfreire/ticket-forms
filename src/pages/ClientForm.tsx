@@ -152,6 +152,13 @@ export const ClientForm = ({ isAdmView }: ClientFormViewProps) => {
     return () => clearTimeout(timerRef.current);
   }
 
+  async function copyToClipboard(value: string) {
+    if (isAdmView) {
+      navigator.clipboard.writeText(value);
+      await navigator.clipboard.readText();
+    }
+  }
+
   async function getAddressByCep(cep: string) {
     const url = `https://brasilapi.com.br/api/cep/v1/${cep.replace(/\D/g, "")}`;
 
@@ -373,6 +380,9 @@ export const ClientForm = ({ isAdmView }: ClientFormViewProps) => {
                               }
                             }}
                             onChange={handleChange("cpf")}
+                            onClick={(e) =>
+                              copyToClipboard(e.currentTarget.value)
+                            }
                             mask="999.999.999-99"
                             placeholder="999.999.999-99"
                             maskChar={null}
@@ -400,6 +410,9 @@ export const ClientForm = ({ isAdmView }: ClientFormViewProps) => {
                               }
                             }}
                             onChange={handleChange("cnpj")}
+                            onClick={(e) =>
+                              copyToClipboard(e.currentTarget.value)
+                            }
                             mask="99.999.999/9999-99"
                             placeholder="99.999.999/9999-99"
                             maskChar={null}
@@ -427,6 +440,7 @@ export const ClientForm = ({ isAdmView }: ClientFormViewProps) => {
                         id="nome"
                         value={values.name}
                         onChange={handleChange("name")}
+                        onClick={(e) => copyToClipboard(e.currentTarget.value)}
                         required
                         maxLength={50}
                       />
@@ -451,6 +465,7 @@ export const ClientForm = ({ isAdmView }: ClientFormViewProps) => {
                         className={maskedInputStyle}
                         value={values.phone}
                         onChange={handleChange("phone")}
+                        onClick={(e) => copyToClipboard(e.currentTarget.value)}
                         mask="(99) 99999-9999"
                         placeholder="(99) 99999-9999"
                         maskChar={null}
@@ -473,6 +488,7 @@ export const ClientForm = ({ isAdmView }: ClientFormViewProps) => {
                         type="email"
                         value={values.email}
                         onChange={handleChange("email")}
+                        onClick={(e) => copyToClipboard(e.currentTarget.value)}
                         required
                         maxLength={40}
                       />
@@ -496,6 +512,7 @@ export const ClientForm = ({ isAdmView }: ClientFormViewProps) => {
                         className={cepInpuStyle}
                         value={values.cep}
                         onChange={handleChange("cep")}
+                        onClick={(e) => copyToClipboard(e.currentTarget.value)}
                         onBlur={async () => {
                           if (values.cep.length == 10) {
                             const address = await getAddressByCep(values.cep);
@@ -533,6 +550,7 @@ export const ClientForm = ({ isAdmView }: ClientFormViewProps) => {
                         id="rua"
                         value={values.street}
                         onChange={handleChange("street")}
+                        onClick={(e) => copyToClipboard(e.currentTarget.value)}
                         placeholder="Avenida, rua etc"
                         required
                       />
@@ -553,6 +571,7 @@ export const ClientForm = ({ isAdmView }: ClientFormViewProps) => {
                         className="sm:w-[80px]"
                         value={values.number}
                         onChange={handleChange("number")}
+                        onClick={(e) => copyToClipboard(e.currentTarget.value)}
                         required
                         maxLength={10}
                       />
@@ -580,6 +599,9 @@ export const ClientForm = ({ isAdmView }: ClientFormViewProps) => {
                           id="neighborhood"
                           value={values.neighborhood}
                           onChange={handleChange("neighborhood")}
+                          onClick={(e) =>
+                            copyToClipboard(e.currentTarget.value)
+                          }
                           required
                         />
                       </InputWrapper>
@@ -600,6 +622,9 @@ export const ClientForm = ({ isAdmView }: ClientFormViewProps) => {
                           id="cidade"
                           value={values.city}
                           onChange={handleChange("city")}
+                          onClick={(e) =>
+                            copyToClipboard(e.currentTarget.value)
+                          }
                           required
                         />
                       </InputWrapper>
@@ -625,6 +650,9 @@ export const ClientForm = ({ isAdmView }: ClientFormViewProps) => {
                           id="complement"
                           value={values.complement}
                           onChange={handleChange("complement")}
+                          onClick={(e) =>
+                            copyToClipboard(e.currentTarget.value)
+                          }
                           placeholder="Ex. Apto, Casa"
                           required
                         />
