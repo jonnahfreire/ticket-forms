@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { DataProps, getTickets, updateTicket } from "../services/TicketService";
-import { LoadingWrapper, Wrapper } from "./ClientForm";
+import { FormItemWrapper, LoadingWrapper, Wrapper } from "./ClientForm";
 
 import tw from "tailwind-styled-components";
 
@@ -8,7 +8,7 @@ import Loading from "../assets/loading.gif";
 
 import "../components/utils/custom-scrollbar.css";
 
-const ActionButton = tw.button`
+export const ActionButton = tw.button`
   text-[10px] 
   shadow-md 
   rounded-xl 
@@ -27,10 +27,9 @@ interface SelectedDataProps {
 }
 
 export const Tickets = () => {
-  const [selectedTickets, setSelectedTickets] = useState<SelectedDataProps[]>(
-    []
-  );
+  const [tickets, setTickets] = useState<SelectedDataProps[]>([]);
 
+  const [filter, setFilter] = useState<string>();
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isAllRowsChecked, setAllRowsChecked] = useState<boolean>(false);
 
@@ -45,20 +44,28 @@ export const Tickets = () => {
     // "Ações",
   ];
 
-  async function getAllTickets() {
+  const filterBy = async (filter: string = "all") =>
+    await getAllTickets(filter);
+
+  async function getAllTickets(filter: string = "pending") {
     const response = await getTickets();
 
     const data: SelectedDataProps[] = response.map((ticket) => ({
       selected: false,
       ticket,
     }));
-    setSelectedTickets(data);
+
+    filter === "all" && setTickets(data);
+    filter === "pending" && setTickets(data.filter((t) => t.ticket?.pending == true));
+    filter === "created" && setTickets(data.filter((t) => t.ticket?.pending == false));
+
     setIsLoading(false);
+    setFilter(filter);
   }
 
   async function handleSetTicketCreated(pending: boolean = false) {
-    if (selectedTickets.some((data) => data.selected)) {
-      const data = selectedTickets.map((data) => {
+    if (tickets.some((data) => data.selected)) {
+      const data = tickets.map((data) => {
         if (data.selected) {
           updateTicket(data.ticket.id!, { pending });
           data.ticket.pending = pending;
@@ -67,23 +74,23 @@ export const Tickets = () => {
 
         return data;
       });
-      setSelectedTickets(data);
+      setTickets(data);
       setAllRowsChecked(false);
     }
   }
 
   function handleSelectAllTickets() {
-    const data = selectedTickets.map((data) => {
+    const data = tickets.map((data) => {
       data.selected = !data.selected;
       return data;
     });
 
-    setSelectedTickets(data);
+    setTickets(data);
     setAllRowsChecked(!isAllRowsChecked);
   }
 
   function handleSelectTicket(ticket: DataProps) {
-    const data = selectedTickets.map((data) => {
+    const data = tickets.map((data) => {
       if (data.ticket.id === ticket.id) {
         data.selected = !data.selected;
       }
@@ -91,7 +98,7 @@ export const Tickets = () => {
       return data;
     });
 
-    setSelectedTickets(data);
+    setTickets(data);
   }
 
   useEffect(() => {
@@ -106,7 +113,7 @@ export const Tickets = () => {
           <span className="font-bold mt-10">Buscando...</span>
         </LoadingWrapper>
       )}
-      {!isLoading && selectedTickets.length && (
+      {!isLoading && tickets.length && (
         <div className="w-100">
           <div
             className="actions-container mt-5 mb-2 px-1 w-100"
@@ -114,15 +121,65 @@ export const Tickets = () => {
               minHeight: 40,
               display: "flex",
               alignItems: "center",
-              justifyContent: "flex-end",
+              justifyContent: "space-between",
             }}
           >
-            <ActionButton onClick={() => handleSetTicketCreated()}>
-              Marcar como {isAllRowsChecked ? "geradas" : "gerada"}
-            </ActionButton>
-            <ActionButton onClick={() => handleSetTicketCreated(true)}>
-              Marcar como {isAllRowsChecked ? "pendentes" : "pendente"}
-            </ActionButton>
+            <FormItemWrapper className="sm:flex-row items-center justify-center border p-2 rounded">
+              <label className="mr-3">Filtros: </label>
+              <FormItemWrapper className="sm:flex-row items-center justify-center mr-5 cursor-pointer">
+                <label className="cursor-pointer font-semibold" htmlFor="all">
+                  Todas
+                </label>
+                <input
+                  id="all"
+                  type="radio"
+                  className="ml-2 cursor-pointer"
+                  name="filter-selector"
+                  onChange={() => filterBy("all")}
+                  checked={filter == "all"}
+                />
+              </FormItemWrapper>
+              <FormItemWrapper className="sm:flex-row items-center justify-center mr-5 cursor-pointer">
+                <label
+                  className="cursor-pointer font-semibold"
+                  htmlFor="created"
+                >
+                  Geradas
+                </label>
+                <input
+                  id="created"
+                  type="radio"
+                  className="ml-2 cursor-pointer"
+                  name="filter-selector"
+                  onChange={() => filterBy("created")}
+                  checked={filter == "created"}
+                />
+              </FormItemWrapper>
+              <FormItemWrapper className="sm:flex-row items-center justify-center cursor-pointer">
+                <label
+                  className="cursor-pointer font-semibold"
+                  htmlFor="pending"
+                >
+                  Pendentes
+                </label>
+                <input
+                  id="pending"
+                  type="radio"
+                  className="ml-2 cursor-pointer"
+                  name="filter-selector"
+                  onChange={() => filterBy("pending")}
+                  checked={filter == "pending"}
+                />
+              </FormItemWrapper>
+            </FormItemWrapper>
+            <FormItemWrapper className="sm:flex-row">
+              <ActionButton onClick={() => handleSetTicketCreated()}>
+                Marcar como {isAllRowsChecked ? "geradas" : "gerada"}
+              </ActionButton>
+              <ActionButton onClick={() => handleSetTicketCreated(true)}>
+                Marcar como {isAllRowsChecked ? "pendentes" : "pendente"}
+              </ActionButton>
+            </FormItemWrapper>
           </div>
           <div className="relative overflow-x-auto overflow-y-scroll max-h-[400px] custom-scrollbar mt-5">
             <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
@@ -145,7 +202,7 @@ export const Tickets = () => {
                 </tr>
               </thead>
               <tbody>
-                {selectedTickets.map((data) => {
+                {tickets.map((data) => {
                   const value = Number(
                     parseFloat(
                       data.ticket.purchaseValue!.replace(",", ".")
@@ -203,7 +260,7 @@ export const Tickets = () => {
           </div>
         </div>
       )}
-      {!isLoading && !selectedTickets.length && (
+      {!isLoading && !tickets.length && (
         <div className="no-tickets-message">
           <span>Nenhuma etiqueta encontrada.</span>
         </div>

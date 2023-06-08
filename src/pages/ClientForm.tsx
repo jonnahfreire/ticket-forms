@@ -4,6 +4,8 @@ import tw from "tailwind-styled-components";
 import InputMask from "react-input-mask";
 import "../components/utils/maskedNumberInputStyle.css";
 
+import { ActionButton } from "../pages/Tickets";
+
 import { Formik } from "formik";
 
 import Loading from "../assets/loading.gif";
@@ -136,8 +138,10 @@ interface ClientFormViewProps {
 export const ClientForm = ({ isAdmView }: ClientFormViewProps) => {
   const params = useParams();
   const [isCPF, setIsCPF] = useState(true);
+  const [isPending, setIsPending] = useState(true);
   const [created, setCreated] = useState(false);
   const [isSubmiting, setIsSubmiting] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   const [message, setMessage] = useState<string | undefined>(undefined);
   const [tickedFilled, setTickedFilled] = useState(false);
   const [tickedFound, setTickedFound] = useState(true);
@@ -195,10 +199,19 @@ export const ClientForm = ({ isAdmView }: ClientFormViewProps) => {
     }
   }
 
+  async function handleSetTicketCreated(pending: boolean = false) {
+    updateTicket(ticket?.id!, { pending }).then((response) => {
+      setIsPending(pending);
+    });
+  }
+
   useEffect(() => {
     if (params.id !== undefined) {
+      isAdmView && setIsSearching(true);
+
       getTicketById(params.id).then((response) => {
         const ticket = response;
+        isAdmView && setIsPending(ticket.pending!);
         setTicket(ticket);
 
         if (response !== null && Object.keys(response).includes("error")) {
@@ -209,16 +222,23 @@ export const ClientForm = ({ isAdmView }: ClientFormViewProps) => {
           response !== null && setTickedFilled(ticket.filled!);
           response === null && setTickedFound(false);
         }
+        isAdmView && setIsSearching(false);
       });
     }
   }, []);
 
   return (
-    <Wrapper className="pt-10">
+    <Wrapper>
       {isSubmiting && (
         <LoadingWrapper>
           <img src={Loading} alt="Loading.." />
           <span className="font-bold mt-10">Enviando...</span>
+        </LoadingWrapper>
+      )}
+      {isSearching && (
+        <LoadingWrapper>
+          <img src={Loading} alt="Loading.." />
+          <span className="font-bold mt-10">Buscando...</span>
         </LoadingWrapper>
       )}
       {created && (
@@ -248,462 +268,552 @@ export const ClientForm = ({ isAdmView }: ClientFormViewProps) => {
         </>
       )}
       {!isSubmiting && !tickedFilled && tickedFound && ticket !== undefined && (
-        <Formik
-          initialValues={{
-            cpf: ticket?.document?.length === 11 ? ticket.document : "",
-            cnpj: ticket?.document?.length === 14 ? ticket.document : "",
-            name: ticket?.name || "",
-            phone: ticket?.phone || "",
-            email: ticket?.email || "",
-            cep: ticket?.cep! || "",
-            street: ticket?.street || "",
-            number: ticket?.number || "",
-            neighborhood: ticket?.neighborhood || "",
-            city: ticket?.city || "",
-            complement: ticket?.complement || "",
-          }}
-          validateOnChange={true}
-          validateOnMount={true}
-          onSubmit={async (values, { resetForm, setFieldError }) => {
-            if (isCPF && values.cpf.length === 14) {
-              const response = await validateDocument(values.cpf);
-
-              if (!response.valid) {
-                return setFieldError("cpf", "CPF inválido");
-              }
-            }
-
-            if (!isCPF && values.cnpj.length === 18) {
-              const response = await validateDocument(values.cnpj);
-              if (!response.valid) {
-                return setFieldError("cnpj", "CNPJ inválido");
-              }
-            }
-
-            const phone =
-              values.phone !== undefined
-                ? values.phone.replace(/\D/g, "")
-                : undefined;
-
-            const document = isCPF
-              ? values.cpf.replace(/\D/g, "")
-              : values.cnpj.replace(/\D/g, "");
-
-            const data = {
-              filled: true,
-              document,
-              name: values.name,
-              phone,
-              email: values.email,
-              cep: values.cep.replace(/\D/g, ""),
-              street: values.street,
-              number: values.number,
-              neighborhood: values.neighborhood,
-              city: values.city,
-              complement: values.complement,
-            };
-
-            if (values.complement !== "") {
-              Object.defineProperty(data, "complement", {
-                value: values.complement,
-              });
-            }
-
-            await handleUpdateTicket(data);
-            resetForm();
-          }}
-          validationSchema={isAdmView ? null : validationSchema}
-        >
-          {({
-            handleChange,
-            handleSubmit,
-            values,
-            touched,
-            errors,
-            setErrors,
-            setFieldError,
-            setFieldValue,
-          }) => (
+        <>
+          {isAdmView && (
             <>
-              <FormItemWrapper
-                className="
+              <FormItemWrapper className="sm:flex-row items-start justify-between pt-3 w-2/4 px-4">
+                <InputWrapper className="w-20">
+                  <label htmlFor="weight" className="mb-2">
+                    Peso
+                  </label>
+                  <Input
+                    id="weight"
+                    value={ticket.weight}
+                    onClick={(e) => copyToClipboard(e.currentTarget.value)}
+                    onChange={() => false}
+                    maxLength={50}
+                  />
+                </InputWrapper>
+                <InputWrapper className="w-20">
+                  <label htmlFor="price" className="mb-2">
+                    Valor
+                  </label>
+                  <Input
+                    id="price"
+                    value={Number(
+                      parseFloat(
+                        ticket.purchaseValue!.replace(",", ".")
+                      ).toFixed(2)
+                    ).toLocaleString("pt-BR", {
+                      currency: "BRL",
+                      style: "currency",
+                    })}
+                    onClick={(e) =>
+                      copyToClipboard(
+                        e.currentTarget.value.trim().replace("R$", "")
+                      )
+                    }
+                    maxLength={50}
+                    onChange={() => false}
+                  />
+                </InputWrapper>
+                <InputWrapper className="w-20">
+                  <label htmlFor="shipping" className="mb-2">
+                    Entrega
+                  </label>
+                  <Input
+                    id="shipping"
+                    value={ticket.shipping ?? "N/A"}
+                    maxLength={50}
+                    onChange={() => false}
+                  />
+                </InputWrapper>
+                <InputWrapper className="w-20">
+                  <label htmlFor="status" className="mb-2">
+                    Status
+                  </label>
+                  <Input
+                    id="status"
+                    value={isPending ? "Pendente" : "Gerada"}
+                    maxLength={50}
+                    onChange={() => false}
+                  />
+                </InputWrapper>
+                <InputWrapper
+                  className="sm:flex-row items-end justify-end"
+                  style={{ minHeight: 70 }}
+                >
+                  <ActionButton onClick={() => handleSetTicketCreated()}>
+                    Marcar como <b>gerada</b>
+                  </ActionButton>
+                  <ActionButton onClick={() => handleSetTicketCreated(true)}>
+                    Marcar como <b>pendente</b>
+                  </ActionButton>
+                </InputWrapper>
+              </FormItemWrapper>
+            </>
+          )}
+          <Formik
+            initialValues={{
+              cpf: ticket?.document?.length === 11 ? ticket.document : "",
+              cnpj: ticket?.document?.length === 14 ? ticket.document : "",
+              name: ticket?.name || "",
+              phone: ticket?.phone || "",
+              email: ticket?.email || "",
+              cep: ticket?.cep! || "",
+              street: ticket?.street || "",
+              number: ticket?.number || "",
+              neighborhood: ticket?.neighborhood || "",
+              city: ticket?.city || "",
+              complement: ticket?.complement || "",
+            }}
+            validateOnChange={true}
+            validateOnMount={true}
+            onSubmit={async (values, { resetForm, setFieldError }) => {
+              if (isCPF && values.cpf.length === 14) {
+                const response = await validateDocument(values.cpf);
+
+                if (!response.valid) {
+                  return setFieldError("cpf", "CPF inválido");
+                }
+              }
+
+              if (!isCPF && values.cnpj.length === 18) {
+                const response = await validateDocument(values.cnpj);
+                if (!response.valid) {
+                  return setFieldError("cnpj", "CNPJ inválido");
+                }
+              }
+
+              const phone =
+                values.phone !== undefined
+                  ? values.phone.replace(/\D/g, "")
+                  : undefined;
+
+              const document = isCPF
+                ? values.cpf.replace(/\D/g, "")
+                : values.cnpj.replace(/\D/g, "");
+
+              const data = {
+                filled: true,
+                document,
+                name: values.name,
+                phone,
+                email: values.email,
+                cep: values.cep.replace(/\D/g, ""),
+                street: values.street,
+                number: values.number,
+                neighborhood: values.neighborhood,
+                city: values.city,
+                complement: values.complement,
+              };
+
+              if (values.complement !== "") {
+                Object.defineProperty(data, "complement", {
+                  value: values.complement,
+                });
+              }
+
+              await handleUpdateTicket(data);
+              resetForm();
+            }}
+            validationSchema={isAdmView ? null : validationSchema}
+          >
+            {({
+              handleChange,
+              handleSubmit,
+              values,
+              touched,
+              errors,
+              setErrors,
+              setFieldError,
+              setFieldValue,
+            }) => (
+              <>
+                <FormItemWrapper
+                  className="
                 flex-col 
                 justify-start 
                 items-start 
                 min-w-fit 
                 pb-[20px] 
                 sm:mt-10 mt-10"
-              >
-                <FormItemWrapper className="sm:flex-row">
-                  <FormItemWrapper>
-                    <FormItemWrapper className="flex-row">
-                      <DocumentTypeSelect
-                        label="CPF"
-                        htmlFor="cpf"
-                        checked={isCPF}
-                        onChange={() => {
-                          setFieldValue("cpf", "");
-                          setIsCPF(true);
-                        }}
-                      />
-                      <DocumentTypeSelect
-                        label="CNPJ"
-                        htmlFor="cnpj"
-                        checked={!isCPF}
-                        onChange={() => {
-                          setFieldValue("cnpj", "");
-                          setIsCPF(false);
-                        }}
-                      />
-                    </FormItemWrapper>
-                    <InputWrapper>
-                      {isCPF ? (
-                        <>
-                          <InputMask
-                            id="cpf"
-                            className={maskedInputStyle}
-                            value={values.cpf}
-                            onBlur={async () => {
-                              setFieldValue("cnpj", "0");
-
-                              if (values.cpf.length === 14) {
-                                const response = await validateDocument(
-                                  values.cpf
-                                );
-
-                                if (!response.valid) {
-                                  return setErrors({
-                                    cpf: "CPF inválido",
-                                    ...errors,
-                                  });
-                                }
-                              }
-                            }}
-                            onChange={handleChange("cpf")}
-                            onClick={(e) =>
-                              copyToClipboard(e.currentTarget.value)
-                            }
-                            mask="999.999.999-99"
-                            placeholder="999.999.999-99"
-                            maskChar={null}
-                          />
-                        </>
-                      ) : (
-                        <>
-                          <InputMask
-                            id="cnpj"
-                            className={maskedInputStyle}
-                            value={values.cnpj}
-                            onBlur={async () => {
-                              setFieldValue("cpf", "0");
-
-                              if (values.cnpj.length === 18) {
-                                const response = await validateDocument(
-                                  values.cnpj
-                                );
-                                if (!response.valid) {
-                                  return setErrors({
-                                    cnpj: "CNPJ inválido",
-                                    ...errors,
-                                  });
-                                }
-                              }
-                            }}
-                            onChange={handleChange("cnpj")}
-                            onClick={(e) =>
-                              copyToClipboard(e.currentTarget.value)
-                            }
-                            mask="99.999.999/9999-99"
-                            placeholder="99.999.999/9999-99"
-                            maskChar={null}
-                          />
-                        </>
-                      )}
-                    </InputWrapper>
-                    {isCPF && errors.cpf && touched.cpf && (
-                      <ErrorsWrapper>
-                        <ErrorText>{errors.cpf}</ErrorText>
-                      </ErrorsWrapper>
-                    )}
-                    {!isCPF && errors.cnpj && touched.cnpj && (
-                      <ErrorsWrapper>
-                        <ErrorText>{errors.cnpj}</ErrorText>
-                      </ErrorsWrapper>
-                    )}
-                  </FormItemWrapper>
-                  <FormItemWrapper>
-                    <InputWrapper>
-                      <label htmlFor="nome" className="mb-2">
-                        Nome completo
-                      </label>
-                      <Input
-                        id="nome"
-                        value={values.name}
-                        onChange={handleChange("name")}
-                        onClick={(e) => copyToClipboard(e.currentTarget.value)}
-                        required
-                        maxLength={50}
-                      />
-                    </InputWrapper>
-                    {errors.name && touched.name && (
-                      <ErrorsWrapper>
-                        <ErrorText>{errors.name}</ErrorText>
-                      </ErrorsWrapper>
-                    )}
-                  </FormItemWrapper>
-                </FormItemWrapper>
-
-                {/* CONTATO */}
-                <FormItemWrapper className="sm:flex-row items-start">
-                  <FormItemWrapper className="sm:w-100">
-                    <InputWrapper>
-                      <label htmlFor="phone" className="text-[.8rem] mb-2">
-                        Celular
-                      </label>
-                      <InputMask
-                        id="phone"
-                        className={maskedInputStyle}
-                        value={values.phone}
-                        onChange={handleChange("phone")}
-                        onClick={(e) => copyToClipboard(e.currentTarget.value)}
-                        mask="(99) 99999-9999"
-                        placeholder="(99) 99999-9999"
-                        maskChar={null}
-                        required
-                      />
-                    </InputWrapper>
-                    {errors.phone && touched.phone && (
-                      <ErrorsWrapper>
-                        <ErrorText>{errors.phone}</ErrorText>
-                      </ErrorsWrapper>
-                    )}
-                  </FormItemWrapper>
-                  <FormItemWrapper className="sm:w-100">
-                    <InputWrapper>
-                      <label htmlFor="email" className="text-[.8rem] mb-2">
-                        Email
-                      </label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={values.email}
-                        onChange={handleChange("email")}
-                        onClick={(e) => copyToClipboard(e.currentTarget.value)}
-                        required
-                        maxLength={40}
-                      />
-                    </InputWrapper>
-                    {errors.email && touched.email && (
-                      <ErrorsWrapper>
-                        <ErrorText>{errors.email}</ErrorText>
-                      </ErrorsWrapper>
-                    )}
-                  </FormItemWrapper>
-                </FormItemWrapper>
-                {/* ENDEREÇO */}
-                <FormItemWrapper className="sm:flex-row items-start justify-between">
-                  <FormItemWrapper className="sm:w-[212px]">
-                    <InputWrapper>
-                      <label htmlFor="cep" className="text-[.8rem] mb-2">
-                        CEP
-                      </label>
-                      <InputMask
-                        id="cep"
-                        className={cepInpuStyle}
-                        value={values.cep}
-                        onChange={handleChange("cep")}
-                        onClick={(e) => copyToClipboard(e.currentTarget.value)}
-                        onBlur={async () => {
-                          if (values.cep.length == 10) {
-                            const address = await getAddressByCep(values.cep);
-
-                            if (address !== null) {
-                              setFieldValue("street", address.street, true);
-                              setFieldValue(
-                                "neighborhood",
-                                address.neighborhood,
-                                true
-                              );
-                              setFieldValue("city", address.city, true);
-                            }
-                          }
-                        }}
-                        placeholder="00000-000"
-                        mask="99.999-999"
-                        maskChar={null}
-                        required
-                      />
-                    </InputWrapper>
-                    {errors.cep && touched.cep && (
-                      <ErrorsWrapper>
-                        <ErrorText>{errors.cep}</ErrorText>
-                      </ErrorsWrapper>
-                    )}
-                  </FormItemWrapper>
-                  <FormItemWrapper className="sm:flex-1">
-                    <InputWrapper>
-                      <label htmlFor="rua" className="text-[.8rem] mb-2">
-                        Logradouro
-                      </label>
-                      <Input
-                        className="sm:flex-1"
-                        id="rua"
-                        value={values.street}
-                        onChange={handleChange("street")}
-                        onClick={(e) => copyToClipboard(e.currentTarget.value)}
-                        placeholder="Avenida, rua etc"
-                        required
-                      />
-                    </InputWrapper>
-                    {errors.street && touched.street && (
-                      <ErrorsWrapper>
-                        <ErrorText>{errors.street}</ErrorText>
-                      </ErrorsWrapper>
-                    )}
-                  </FormItemWrapper>
-                  <FormItemWrapper className="sm:w-[80px]">
-                    <InputWrapper>
-                      <label htmlFor="numero" className="text-[.8rem] mb-2">
-                        Número
-                      </label>
-                      <Input
-                        id="numero"
-                        className="sm:w-[80px]"
-                        value={values.number}
-                        onChange={handleChange("number")}
-                        onClick={(e) => copyToClipboard(e.currentTarget.value)}
-                        required
-                        maxLength={10}
-                      />
-                    </InputWrapper>
-                    {errors.number && touched.number && (
-                      <ErrorsWrapper>
-                        <ErrorText>{errors.number}</ErrorText>
-                      </ErrorsWrapper>
-                    )}
-                  </FormItemWrapper>
-                </FormItemWrapper>
-
-                <FormItemWrapper className="flex-col ">
+                >
                   <FormItemWrapper className="sm:flex-row">
                     <FormItemWrapper>
-                      <InputWrapper>
-                        <label
-                          htmlFor="neighborhood"
-                          className="text-[.8rem] mb-2"
-                        >
-                          Bairro
-                        </label>
-                        <Input
-                          className="sm:w-30 w-100"
-                          id="neighborhood"
-                          value={values.neighborhood}
-                          onChange={handleChange("neighborhood")}
-                          onClick={(e) =>
-                            copyToClipboard(e.currentTarget.value)
-                          }
-                          required
+                      <FormItemWrapper className="flex-row">
+                        <DocumentTypeSelect
+                          label="CPF"
+                          htmlFor="cpf"
+                          checked={isCPF}
+                          onChange={() => {
+                            setFieldValue("cpf", "");
+                            setIsCPF(true);
+                          }}
                         />
+                        <DocumentTypeSelect
+                          label="CNPJ"
+                          htmlFor="cnpj"
+                          checked={!isCPF}
+                          onChange={() => {
+                            setFieldValue("cnpj", "");
+                            setIsCPF(false);
+                          }}
+                        />
+                      </FormItemWrapper>
+                      <InputWrapper>
+                        {isCPF ? (
+                          <>
+                            <InputMask
+                              id="cpf"
+                              className={maskedInputStyle}
+                              value={values.cpf}
+                              onBlur={async () => {
+                                setFieldValue("cnpj", "0");
+
+                                if (values.cpf.length === 14) {
+                                  const response = await validateDocument(
+                                    values.cpf
+                                  );
+
+                                  if (!response.valid) {
+                                    return setErrors({
+                                      cpf: "CPF inválido",
+                                      ...errors,
+                                    });
+                                  }
+                                }
+                              }}
+                              onChange={handleChange("cpf")}
+                              onClick={(e) =>
+                                copyToClipboard(e.currentTarget.value)
+                              }
+                              mask="999.999.999-99"
+                              placeholder="999.999.999-99"
+                              maskChar={null}
+                            />
+                          </>
+                        ) : (
+                          <>
+                            <InputMask
+                              id="cnpj"
+                              className={maskedInputStyle}
+                              value={values.cnpj}
+                              onBlur={async () => {
+                                setFieldValue("cpf", "0");
+
+                                if (values.cnpj.length === 18) {
+                                  const response = await validateDocument(
+                                    values.cnpj
+                                  );
+                                  if (!response.valid) {
+                                    return setErrors({
+                                      cnpj: "CNPJ inválido",
+                                      ...errors,
+                                    });
+                                  }
+                                }
+                              }}
+                              onChange={handleChange("cnpj")}
+                              onClick={(e) =>
+                                copyToClipboard(e.currentTarget.value)
+                              }
+                              mask="99.999.999/9999-99"
+                              placeholder="99.999.999/9999-99"
+                              maskChar={null}
+                            />
+                          </>
+                        )}
                       </InputWrapper>
-                      {errors.neighborhood && touched.neighborhood && (
+                      {isCPF && errors.cpf && touched.cpf && (
                         <ErrorsWrapper>
-                          <ErrorText>{errors.neighborhood}</ErrorText>
+                          <ErrorText>{errors.cpf}</ErrorText>
+                        </ErrorsWrapper>
+                      )}
+                      {!isCPF && errors.cnpj && touched.cnpj && (
+                        <ErrorsWrapper>
+                          <ErrorText>{errors.cnpj}</ErrorText>
                         </ErrorsWrapper>
                       )}
                     </FormItemWrapper>
-
                     <FormItemWrapper>
                       <InputWrapper>
-                        <label htmlFor="cidade" className="text-[.8rem] mb-2">
-                          Cidade
+                        <label htmlFor="nome" className="mb-2">
+                          Nome completo
                         </label>
                         <Input
-                          className="sm:w-70 w-100"
-                          id="cidade"
-                          value={values.city}
-                          onChange={handleChange("city")}
+                          id="nome"
+                          value={values.name}
+                          onChange={handleChange("name")}
                           onClick={(e) =>
                             copyToClipboard(e.currentTarget.value)
                           }
                           required
+                          maxLength={50}
                         />
                       </InputWrapper>
-                      {errors.city && touched.city && (
+                      {errors.name && touched.name && (
                         <ErrorsWrapper>
-                          <ErrorText>{errors.city}</ErrorText>
+                          <ErrorText>{errors.name}</ErrorText>
                         </ErrorsWrapper>
                       )}
                     </FormItemWrapper>
                   </FormItemWrapper>
 
-                  <FormItemWrapper className="sm:flex-row items-end justify-between sm:w-full">
-                    <FormItemWrapper>
+                  {/* CONTATO */}
+                  <FormItemWrapper className="sm:flex-row items-start">
+                    <FormItemWrapper className="sm:w-100">
                       <InputWrapper>
-                        <label
-                          htmlFor="complement"
-                          className="text-[.8rem] mb-2"
-                        >
-                          Complemento
+                        <label htmlFor="phone" className="text-[.8rem] mb-2">
+                          Celular
                         </label>
-                        <Input
-                          className="sm:w-70 w-100"
-                          id="complement"
-                          value={values.complement}
-                          onChange={handleChange("complement")}
+                        <InputMask
+                          id="phone"
+                          className={maskedInputStyle}
+                          value={values.phone}
+                          onChange={handleChange("phone")}
                           onClick={(e) =>
                             copyToClipboard(e.currentTarget.value)
                           }
-                          placeholder="Ex. Apto, Casa"
+                          mask="(99) 99999-9999"
+                          placeholder="(99) 99999-9999"
+                          maskChar={null}
                           required
                         />
                       </InputWrapper>
-                      {errors.complement && touched.complement && (
+                      {errors.phone && touched.phone && (
                         <ErrorsWrapper>
-                          <ErrorText>{errors.complement}</ErrorText>
+                          <ErrorText>{errors.phone}</ErrorText>
                         </ErrorsWrapper>
                       )}
                     </FormItemWrapper>
-                    {/* ENDEREÇO */}
+                    <FormItemWrapper className="sm:w-100">
+                      <InputWrapper>
+                        <label htmlFor="email" className="text-[.8rem] mb-2">
+                          Email
+                        </label>
+                        <Input
+                          id="email"
+                          type="email"
+                          value={values.email}
+                          onChange={handleChange("email")}
+                          onClick={(e) =>
+                            copyToClipboard(e.currentTarget.value)
+                          }
+                          required
+                          maxLength={40}
+                        />
+                      </InputWrapper>
+                      {errors.email && touched.email && (
+                        <ErrorsWrapper>
+                          <ErrorText>{errors.email}</ErrorText>
+                        </ErrorsWrapper>
+                      )}
+                    </FormItemWrapper>
+                  </FormItemWrapper>
+                  {/* ENDEREÇO */}
+                  <FormItemWrapper className="sm:flex-row items-start justify-between">
+                    <FormItemWrapper className="sm:w-[212px]">
+                      <InputWrapper>
+                        <label htmlFor="cep" className="text-[.8rem] mb-2">
+                          CEP
+                        </label>
+                        <InputMask
+                          id="cep"
+                          className={cepInpuStyle}
+                          value={values.cep}
+                          onChange={handleChange("cep")}
+                          onClick={(e) =>
+                            copyToClipboard(e.currentTarget.value)
+                          }
+                          onBlur={async () => {
+                            if (values.cep.length == 10) {
+                              const address = await getAddressByCep(values.cep);
 
-                    {isAdmView && (
+                              if (address !== null) {
+                                setFieldValue("street", address.street, true);
+                                setFieldValue(
+                                  "neighborhood",
+                                  address.neighborhood,
+                                  true
+                                );
+                                setFieldValue("city", address.city, true);
+                              }
+                            }
+                          }}
+                          placeholder="00000-000"
+                          mask="99.999-999"
+                          maskChar={null}
+                          required
+                        />
+                      </InputWrapper>
+                      {errors.cep && touched.cep && (
+                        <ErrorsWrapper>
+                          <ErrorText>{errors.cep}</ErrorText>
+                        </ErrorsWrapper>
+                      )}
+                    </FormItemWrapper>
+                    <FormItemWrapper className="sm:flex-1">
+                      <InputWrapper>
+                        <label htmlFor="rua" className="text-[.8rem] mb-2">
+                          Logradouro
+                        </label>
+                        <Input
+                          className="sm:flex-1"
+                          id="rua"
+                          value={values.street}
+                          onChange={handleChange("street")}
+                          onClick={(e) =>
+                            copyToClipboard(e.currentTarget.value)
+                          }
+                          placeholder="Avenida, rua etc"
+                          required
+                        />
+                      </InputWrapper>
+                      {errors.street && touched.street && (
+                        <ErrorsWrapper>
+                          <ErrorText>{errors.street}</ErrorText>
+                        </ErrorsWrapper>
+                      )}
+                    </FormItemWrapper>
+                    <FormItemWrapper className="sm:w-[80px]">
+                      <InputWrapper>
+                        <label htmlFor="numero" className="text-[.8rem] mb-2">
+                          Número
+                        </label>
+                        <Input
+                          id="numero"
+                          className="sm:w-[80px]"
+                          value={values.number}
+                          onChange={handleChange("number")}
+                          onClick={(e) =>
+                            copyToClipboard(e.currentTarget.value)
+                          }
+                          required
+                          maxLength={10}
+                        />
+                      </InputWrapper>
+                      {errors.number && touched.number && (
+                        <ErrorsWrapper>
+                          <ErrorText>{errors.number}</ErrorText>
+                        </ErrorsWrapper>
+                      )}
+                    </FormItemWrapper>
+                  </FormItemWrapper>
+
+                  <FormItemWrapper className="flex-col ">
+                    <FormItemWrapper className="sm:flex-row">
                       <FormItemWrapper>
-                        <button className="sm:mr-2 mb-2 sm:w-100 bg-[#1b1d37] p-2 rounded">
-                          <a href={routes.tickets} className="text-white">
-                            Voltar
-                          </a>
-                        </button>
+                        <InputWrapper>
+                          <label
+                            htmlFor="neighborhood"
+                            className="text-[.8rem] mb-2"
+                          >
+                            Bairro
+                          </label>
+                          <Input
+                            className="sm:w-30 w-100"
+                            id="neighborhood"
+                            value={values.neighborhood}
+                            onChange={handleChange("neighborhood")}
+                            onClick={(e) =>
+                              copyToClipboard(e.currentTarget.value)
+                            }
+                            required
+                          />
+                        </InputWrapper>
+                        {errors.neighborhood && touched.neighborhood && (
+                          <ErrorsWrapper>
+                            <ErrorText>{errors.neighborhood}</ErrorText>
+                          </ErrorsWrapper>
+                        )}
                       </FormItemWrapper>
-                    )}
 
-                    <SubmitButton
-                      className="sm:mr-2 mb-2 sm:w-100"
-                      type="submit"
-                      onClick={async () => {
-                        handleSubmit();
-                        if (isCPF && values.cpf.length === 14) {
-                          const response = await validateDocument(values.cpf);
+                      <FormItemWrapper>
+                        <InputWrapper>
+                          <label htmlFor="cidade" className="text-[.8rem] mb-2">
+                            Cidade
+                          </label>
+                          <Input
+                            className="sm:w-70 w-100"
+                            id="cidade"
+                            value={values.city}
+                            onChange={handleChange("city")}
+                            onClick={(e) =>
+                              copyToClipboard(e.currentTarget.value)
+                            }
+                            required
+                          />
+                        </InputWrapper>
+                        {errors.city && touched.city && (
+                          <ErrorsWrapper>
+                            <ErrorText>{errors.city}</ErrorText>
+                          </ErrorsWrapper>
+                        )}
+                      </FormItemWrapper>
+                    </FormItemWrapper>
 
-                          if (!response.valid) {
-                            setFieldError("cpf", "CPF inválido");
+                    <FormItemWrapper className="sm:flex-row items-end justify-between sm:w-full">
+                      <FormItemWrapper>
+                        <InputWrapper>
+                          <label
+                            htmlFor="complement"
+                            className="text-[.8rem] mb-2"
+                          >
+                            Complemento
+                          </label>
+                          <Input
+                            className="sm:w-70 w-100"
+                            id="complement"
+                            value={values.complement}
+                            onChange={handleChange("complement")}
+                            onClick={(e) =>
+                              copyToClipboard(e.currentTarget.value)
+                            }
+                            placeholder="Ex. Apto, Casa"
+                            required
+                          />
+                        </InputWrapper>
+                        {errors.complement && touched.complement && (
+                          <ErrorsWrapper>
+                            <ErrorText>{errors.complement}</ErrorText>
+                          </ErrorsWrapper>
+                        )}
+                      </FormItemWrapper>
+                      {/* ENDEREÇO */}
+
+                      {isAdmView && (
+                        <FormItemWrapper>
+                          <button className="sm:mr-2 mb-2 sm:w-100 bg-[#1b1d37] p-2 rounded">
+                            <a href={routes.tickets} className="text-white">
+                              Voltar
+                            </a>
+                          </button>
+                        </FormItemWrapper>
+                      )}
+
+                      <SubmitButton
+                        className="sm:mr-2 mb-2 sm:w-100"
+                        type="submit"
+                        onClick={async () => {
+                          handleSubmit();
+                          if (isCPF && values.cpf.length === 14) {
+                            const response = await validateDocument(values.cpf);
+
+                            if (!response.valid) {
+                              setFieldError("cpf", "CPF inválido");
+                            }
                           }
-                        }
 
-                        if (!isCPF && values.cnpj.length === 18) {
-                          const response = await validateDocument(values.cnpj);
-                          if (!response.valid) {
-                            setFieldError("cnpj", "CNPJ inválido");
+                          if (!isCPF && values.cnpj.length === 18) {
+                            const response = await validateDocument(
+                              values.cnpj
+                            );
+                            if (!response.valid) {
+                              setFieldError("cnpj", "CNPJ inválido");
+                            }
                           }
-                        }
-                      }}
-                    >
-                      {isAdmView ? "Atualizar" : "Enviar"}
-                    </SubmitButton>
+                        }}
+                      >
+                        {isAdmView ? "Atualizar" : "Enviar"}
+                      </SubmitButton>
+                    </FormItemWrapper>
                   </FormItemWrapper>
                 </FormItemWrapper>
-              </FormItemWrapper>
-            </>
-          )}
-        </Formik>
+              </>
+            )}
+          </Formik>
+        </>
       )}
     </Wrapper>
   );

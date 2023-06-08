@@ -98,11 +98,11 @@ export const Form = () => {
               shipping: values.shipping ?? null,
             };
 
-            if (values.shipping != "") {
-              Object.defineProperty(data, "shipping", {
-                value: values.shipping,
-              });
-            }
+            // if (values.shipping != "") {
+            //   Object.defineProperty(data, "shipping", {
+            //     value: values.shipping,
+            //   });
+            // }
 
             await handleCreateTicket(data);
             resetForm();

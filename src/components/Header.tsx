@@ -12,7 +12,7 @@ const Header = tw.div`
   items-center
   justify-between
   w-100
-  h-140
+  max-h-[80px]
   p-4
   shadow-md
 `;
